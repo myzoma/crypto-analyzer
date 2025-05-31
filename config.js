@@ -33,7 +33,7 @@ const CONFIG = {
     
     // إعدادات التصفية
     FILTERS: {
-        MIN_VOLUME: 500000, // الحد الأدنى لحجم التداول
+        MIN_VOLUME: 1000, // الحد الأدنى لحجم التداول
         MAX_RESULTS: 100, // أفضل 100 عملة
         EXCLUDED_SYMBOLS: [
             'USDT', 'USDC', 'BUSD', 'DAI', 'TUSD', 'USDP', 'USDD', 'FRAX'
