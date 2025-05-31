@@ -610,20 +610,32 @@ return {
     }
 
     // باقي الدوال تبقى كما هي...
-   calculatePriceTargets(coinData, levels) {
+  calculatePriceTargets(coinData, levels) {
     const currentPrice = coinData.price;
-    const resistance1 = levels.resistance1;
-    const resistance2 = levels.resistance2;
+    
+    // حساب الأهداف القصيرة
+    const target1 = currentPrice * 1.05;  // +5%
+    const target2 = currentPrice * 1.10;  // +10%
+    const target3 = currentPrice * 1.15;  // +15%
+    
+    // حساب الهدف طويل المدى (يجب أن يكون الأعلى دائماً)
+    const longTermOptions = [
+        currentPrice * 1.30,              // +30%
+        target3 * 1.20,                   // الهدف الثالث +20%
+        levels.resistance2 || currentPrice * 1.35,  // المقاومة الثانية
+        currentPrice * 1.50               // +50% كحد أقصى معقول
+    ];
+    
+    const longTerm = Math.max(...longTermOptions.filter(x => x > target3));
     
     return {
-        target1: currentPrice * 1.05,        // +5%
-        target2: currentPrice * 1.10,        // +10%
-        target3: currentPrice * 1.15,        // +15%
-        longTerm: Math.max(                  // ✅ الأكبر من:
-            currentPrice * 1.25,             // +25%
-            resistance2 * 1.10               // أو المقاومة الثانية +10%
-        )
+        target1,
+        target2, 
+        target3,
+        longTerm: longTerm || currentPrice * 1.30  // fallback
     };
+}
+
 }
 
     calculateEntryExit(coinData, levels) {
