@@ -267,7 +267,7 @@ async fetchCoinMarketDataFallback(instrument) {
                 indicators.trendSignal = 'اتجاه قوي';
             }
             
-    // دالة حساب الدعم والمقاومة المُصححة
+   // دالة حساب الدعم والمقاومة المُصححة
 calculateRealSupportResistanceLevels(candleData) {
     const closes = candleData.map(candle => parseFloat(candle[4]));
     const highs = candleData.map(candle => parseFloat(candle[2]));
@@ -312,7 +312,6 @@ calculateRealSupportResistanceLevels(candleData) {
         pivot: (high24h + low24h + currentPrice) / 3
     };
 }
-
 
     async fetchCandleData(instId, timeframe = '1H', limit = 100) {
         try {
