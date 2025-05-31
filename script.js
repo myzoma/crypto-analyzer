@@ -3,8 +3,12 @@ class CryptoAnalyzer {
     constructor() {
         this.coins = [];
         this.isLoading = false;
-        this.updateTimer = null;
-        this.countdownTimer = null;
+        this.lastUpdate = null;
+        this.config = {
+            UPDATE_INTERVAL: 300000, // 5 دقائق
+            MAX_COINS: 20,
+            API_BASE: 'https://www.okx.com/api/v5'
+        };
         this.init();
     }
 
@@ -263,30 +267,50 @@ async fetchCoinMarketDataFallback(instrument) {
                 indicators.trendSignal = 'اتجاه قوي';
             }
             
-            // حساب مستويات الدعم والمقاومة الحقيقية
-            const levels = this.calculateRealSupportResistanceLevels(candleData);
-            
-            // حساب الأهداف السعرية
-            const targets = this.calculatePriceTargets(coinData, levels);
-            
-            // نقطة الدخول ووقف الخسارة
-            const entryExit = this.calculateEntryExit(coinData, levels);
-            
-            return {
-                ...coinData,
-                score: Math.min(score, 100),
-                indicators,
-                levels,
-                targets,
-                entryExit,
-                analysis: this.generateAnalysis(coinData, indicators, score),
-                lastAnalysis: Date.now()
-            };
-            
-        } catch (error) {
-            console.error(`خطأ في تحليل ${coinData.symbol}:`, error);
-            return null;
+            // دالة حساب الدعم والمقاومة المُصححة
+    calculateRealSupportResistanceLevels(candleData) {
+        const closes = candleData.map(candle => parseFloat(candle[4]));
+        const highs = candleData.map(candle => parseFloat(candle[2]));
+        const lows = candleData.map(candle => parseFloat(candle[3]));
+        
+        const currentPrice = closes[closes.length - 1];
+        const high24h = Math.max(...highs.slice(-24));
+        const low24h = Math.min(...lows.slice(-24));
+        
+        // حساب مستويات الدعم والمقاومة
+        const supports = [];
+        const resistances = [];
+        
+        for (let i = 1; i < closes.length - 1; i++) {
+            if (closes[i] < closes[i-1] && closes[i] < closes[i+1]) {
+                if (closes[i] < currentPrice) supports.push(closes[i]);
+            }
+            if (closes[i] > closes[i-1] && closes[i] > closes[i+1]) {
+                if (closes[i] > currentPrice) resistances.push(closes[i]);
+            }
         }
+        
+        supports.sort((a, b) => b - a);
+        resistances.sort((a, b) => a - b);
+        
+        let support1 = supports.length > 0 ? supports[0] : currentPrice * 0.95;
+        let support2 = supports.length > 1 ? supports[1] : currentPrice * 0.90;
+        let resistance1 = resistances.length > 0 ? resistances[0] : currentPrice * 1.05;
+        let resistance2 = resistances.length > 1 ? resistances[1] : currentPrice * 1.15;
+        
+        // التأكد من الترتيب الصحيح
+        if (support1 >= currentPrice) support1 = currentPrice * 0.95;
+        if (support2 >= support1) support2 = support1 * 0.95;
+        if (resistance1 <= currentPrice) resistance1 = currentPrice * 1.05;
+        if (resistance2 <= resistance1) resistance2 = resistance1 * 1.05;
+        
+        return {
+            support1,
+            support2,
+            resistance1,
+            resistance2,
+            pivot: (high24h + low24h + currentPrice) / 3
+        };
     }
 
     async fetchCandleData(instId, timeframe = '1H', limit = 100) {
@@ -561,26 +585,45 @@ async fetchCoinMarketDataFallback(instrument) {
         };
     }
 
-    // باقي الدوال تبقى كما هي...
+  // دالة حساب الأهداف المُصححة
     calculatePriceTargets(coinData, levels) {
         const currentPrice = coinData.price;
-        const resistance = levels.resistance1;
         
-        return {
-            target1: currentPrice * 1.05,
-            target2: currentPrice * 1.10,
-            target3: currentPrice * 1.15,
-            longTerm: resistance * 1.08
-        };
+        const target1 = currentPrice * 1.05;
+        const target2 = currentPrice * 1.10;
+        const target3 = currentPrice * 1.15;
+        const longTerm = Math.max(
+            currentPrice * 1.35,
+            target3 * 1.20,
+            levels.resistance2 || currentPrice * 1.40
+        );
+        
+        return { target1, target2, target3, longTerm };
     }
 
+    // دالة التحقق الشامل
+    validateAllData(coinData) {
+        const { price, levels, targets, entryExit } = coinData;
+        
+        // تحقق منطقي
+        if (levels.support1 >= price) levels.support1 = price * 0.95;
+        if (levels.resistance1 <= price) levels.resistance1 = price * 1.05;
+        if (entryExit.stopLoss >= price) entryExit.stopLoss = price * 0.95;
+        if (targets.longTerm <= targets.target3) targets.longTerm = targets.target3 * 1.20;
+        
+        return coinData;
+    }
+}
+
+  // دالة حساب نقطة الدخول المُصححة
     calculateEntryExit(coinData, levels) {
         const currentPrice = coinData.price;
+        const entryPoint = Math.max(currentPrice * 1.02, levels.resistance1 * 0.99);
+        const stopLoss = Math.min(levels.support1, currentPrice * 0.95);
         
         return {
-            entryPoint: currentPrice * 0.995,
-            stopLoss: levels.support1,
-            takeProfit: currentPrice * 1.08
+            entryPoint,
+            stopLoss
         };
     }
 
