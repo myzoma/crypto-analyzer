@@ -508,3 +508,124 @@ header h1 {
     margin: 20px 0;
     border: 1px solid #4caf50;
 }
+/* إضافة أنماط جديدة للبيانات الحقيقية */
+.real-data-indicator {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.real-data-indicator::before {
+    content: "📡";
+    font-size: 14px;
+}
+
+.api-status {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 15px;
+    font-size: 11px;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.api-status.connected {
+    border-left: 4px solid #4CAF50;
+}
+
+.api-status.disconnected {
+    border-left: 4px solid #f44336;
+}
+
+/* تحسين عرض المؤشرات */
+.indicators .indicator.strong {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+/* تحسين عرض النقاط */
+.coin-score {
+    position: relative;
+    overflow: hidden;
+}
+
+.coin-score::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* تحسين الاستجابة للشاشات الصغيرة */
+@media (max-width: 768px) {
+    .refresh-button {
+        bottom: 10px !important;
+        right: 10px !important;
+        padding: 10px 15px !important;
+        font-size: 12px !important;
+    }
+    
+    .real-data-indicator {
+        top: 5px !important;
+        left: 5px !important;
+        padding: 6px 12px !important;
+        font-size: 10px !important;
+    }
+    
+    .api-status {
+        bottom: 10px !important;
+        left: 10px !important;
+        padding: 8px 12px !important;
+        font-size: 10px !important;
+    }
+}
+
+/* تأثيرات بصرية إضافية */
+.coin-card:hover .real-data-badge {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+
+.loading-content .spinner {
+    background: conic-gradient(from 0deg, #2196F3, #4CAF50, #FF9800, #f44336, #2196F3);
+    border: none;
+    border-radius: 50%;
+    position: relative;
+}
+
+.loading-content .spinner::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    background: white;
+    border-radius: 50%;
+}
