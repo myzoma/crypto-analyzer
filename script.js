@@ -299,11 +299,12 @@ return {
     analysis: this.generateAnalysis(coinData, indicators, score),
     lastAnalysis: Date.now()
 };
-
 } catch (error) {
     console.error(`خطأ في تحليل ${coinData.symbol}:`, error);
     return null;
 }
+}
+
 validateTargets(targets, currentPrice) {
     // التأكد من الترتيب الصحيح
     if (targets.target1 <= currentPrice) targets.target1 = currentPrice * 1.05;
