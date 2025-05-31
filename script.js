@@ -47,9 +47,9 @@ class CryptoAnalyzer {
         }
     }
 
-    async fetchAndAnalyzeCoins() {
-        // محاكاة جلب البيانات من OKX API
-        const mockData = await this.getMockData();
+   async fetchCoinData(symbol) {
+    const response = await fetch(`https://www.okx.com/api/v5/market/candles?instId=${symbol}-USDT&bar=1H&limit=100`);
+    const data = await response.json();
         
         // تحليل كل عملة
         const analyzedCoins = [];
@@ -202,13 +202,12 @@ class CryptoAnalyzer {
         };
     }
 
-    calculateRSI(coinData) {
-        // محاكاة حساب RSI
-        const baseRSI = 45 + (coinData.change24h * 2);
-        return Math.max(20, Math.min(80, baseRSI + Math.random() * 10));
+   calculateRealRSI(candles, period = 14) {
+    // حساب RSI من الشموع الحقيقية
+    const gains = [], losses = [];
     }
 
-    calculateMACD(coinData) {
+   calculateRealMACD(candles, 12, 26, 9) {
         // محاكاة حساب MACD
         const macdValue = coinData.change24h > 2 ? 'bullish' : 'bearish';
         return {
