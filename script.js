@@ -140,28 +140,6 @@ class CryptoAnalyzer {
             throw new Error(`فشل في الاتصال بـ OKX API: ${error.message}`);
         }
     }
-async fetchCandleData(symbol, timeframe = '1H', limit = 100) {
-    const timestamp = new Date().toISOString();
-    const method = 'GET';
-    const requestPath = `/api/v5/market/candles?instId=${symbol}-USDT&bar=${timeframe}&limit=${limit}`;
-    
-    const signature = await this.generateSignature(timestamp, method, requestPath);
-    
-    const headers = {
-        'OK-ACCESS-KEY': OKX_CONFIG.API_KEY,
-        'OK-ACCESS-SIGN': signature,
-        'OK-ACCESS-TIMESTAMP': timestamp,
-        'OK-ACCESS-PASSPHRASE': OKX_CONFIG.PASSPHRASE,
-        'Content-Type': 'application/json'
-    };
-    
-    const response = await fetch(`${OKX_CONFIG.BASE_URL}${requestPath}`, {
-        method: 'GET',
-        headers: headers
-    });
-    
-    return await response.json();
-}
 
     async fetchCoinMarketData(instrument) {
         try {
@@ -277,44 +255,32 @@ async fetchCandleData(symbol, timeframe = '1H', limit = 100) {
                 score += CONFIG.SCORING.TREND_STRENGTH;
                 indicators.trendSignal = 'اتجاه قوي';
             }
-           // حساب مستويات الدعم والمقاومة الحقيقية
-const levels = this.calculateRealSupportResistanceLevels(candleData);
-
-// حساب الأهداف السعرية
-const targets = this.calculatePriceTargets(coinData, levels);
-
-// التحقق من صحة الأهداف
-const validatedTargets = this.validateTargets(targets, coinData.price);
-
-// نقطة الدخول ووقف الخسارة
-const entryExit = this.calculateEntryExit(coinData, levels);
-
-return {
-    ...coinData,
-    score: Math.min(score, 100),
-    indicators,
-    levels,
-    targets: validatedTargets,
-    entryExit,
-    analysis: this.generateAnalysis(coinData, indicators, score),
-    lastAnalysis: Date.now()
-};
-} catch (error) {
-    console.error(`خطأ في تحليل ${coinData.symbol}:`, error);
-    return null;
-}
-}
-
-validateTargets(targets, currentPrice) {
-    // التأكد من الترتيب الصحيح
-    if (targets.target1 <= currentPrice) targets.target1 = currentPrice * 1.05;
-    if (targets.target2 <= targets.target1) targets.target2 = targets.target1 * 1.05;
-    if (targets.target3 <= targets.target2) targets.target3 = targets.target2 * 1.05;
-    if (targets.longTerm <= targets.target3) targets.longTerm = targets.target3 * 1.10;
-    
-    return targets;
-}
-
+            
+            // حساب مستويات الدعم والمقاومة الحقيقية
+            const levels = this.calculateRealSupportResistanceLevels(candleData);
+            
+            // حساب الأهداف السعرية
+            const targets = this.calculatePriceTargets(coinData, levels);
+            
+            // نقطة الدخول ووقف الخسارة
+            const entryExit = this.calculateEntryExit(coinData, levels);
+            
+            return {
+                ...coinData,
+                score: Math.min(score, 100),
+                indicators,
+                levels,
+                targets,
+                entryExit,
+                analysis: this.generateAnalysis(coinData, indicators, score),
+                lastAnalysis: Date.now()
+            };
+            
+        } catch (error) {
+            console.error(`خطأ في تحليل ${coinData.symbol}:`, error);
+            return null;
+        }
+    }
 
     async fetchCandleData(instId, timeframe = '1H', limit = 100) {
         try {
@@ -346,18 +312,6 @@ validateTargets(targets, currentPrice) {
             return null;
         }
     }
-async generateSignature(timestamp, method, requestPath, body = '') {
-    const message = timestamp + method + requestPath + body;
-    const key = await crypto.subtle.importKey(
-        'raw',
-        new TextEncoder().encode(OKX_CONFIG.SECRET_KEY),
-        { name: 'HMAC', hash: 'SHA-256' },
-        false,
-        ['sign']
-    );
-    const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
-    return btoa(String.fromCharCode(...new Uint8Array(signature)));
-}
 
     calculateRealRSI(candles, period = 14) {
         if (candles.length < period + 1) return 50;
@@ -592,54 +546,26 @@ async generateSignature(timestamp, method, requestPath, body = '') {
         const low24h = Math.min(...lows.slice(-24));
         
         return {
-           const currentPrice = closes[closes.length - 1];
-
-// ترتيب صحيح للمستويات
-supports.sort((a, b) => b - a); // من الأعلى للأقل (أقرب للسعر الحالي)
-resistances.sort((a, b) => a - b); // من الأقل للأعلى (أقرب للسعر الحالي)
-
-// فلترة المستويات القريبة من السعر الحالي
-const validSupports = supports.filter(s => s < currentPrice);
-const validResistances = resistances.filter(r => r > currentPrice);
-
-return {
-    support1: validSupports.length > 0 ? validSupports[0] : currentPrice * 0.95,
-    support2: validSupports.length > 1 ? validSupports[1] : currentPrice * 0.90,
-    resistance1: validResistances.length > 0 ? validResistances[0] : currentPrice * 1.05,
-    resistance2: validResistances.length > 1 ? validResistances[1] : currentPrice * 1.15,
-    pivot: (high24h + low24h + currentPrice) / 3
-};
-
+            support1: supports.length > 0 ? supports[0] : low24h,
+            support2: supports.length > 1 ? supports[1] : low24h * 0.95,
+            resistance1: resistances.length > 0 ? resistances[0] : high24h,
+            resistance2: resistances.length > 1 ? resistances[1] : high24h * 1.05,
+            pivot: (high24h + low24h + currentPrice) / 3
+        };
     }
 
     // باقي الدوال تبقى كما هي...
-  calculatePriceTargets(coinData, levels) {
-    const currentPrice = coinData.price;
-    
-    // حساب الأهداف القصيرة
-    const target1 = currentPrice * 1.05;  // +5%
-    const target2 = currentPrice * 1.10;  // +10%
-    const target3 = currentPrice * 1.15;  // +15%
-    
-    // حساب الهدف طويل المدى (يجب أن يكون الأعلى دائماً)
-    const longTermOptions = [
-        currentPrice * 1.30,              // +30%
-        target3 * 1.20,                   // الهدف الثالث +20%
-        levels.resistance2 || currentPrice * 1.35,  // المقاومة الثانية
-        currentPrice * 1.50               // +50% كحد أقصى معقول
-    ];
-    
-    const longTerm = Math.max(...longTermOptions.filter(x => x > target3));
-    
-    return {
-        target1,
-        target2, 
-        target3,
-        longTerm: longTerm || currentPrice * 1.30  // fallback
-    };
-}
-
-}
+    calculatePriceTargets(coinData, levels) {
+        const currentPrice = coinData.price;
+        const resistance = levels.resistance1;
+        
+        return {
+            target1: currentPrice * 1.05,
+            target2: currentPrice * 1.10,
+            target3: currentPrice * 1.15,
+            longTerm: resistance * 1.08
+        };
+    }
 
     calculateEntryExit(coinData, levels) {
         const currentPrice = coinData.price;
@@ -808,19 +734,12 @@ return {
         document.getElementById('stopLoss').textContent = `$${this.formatNumber(coin.entryExit.stopLoss)}`;
         
         // الأهداف السعرية
-       const currentPrice = coin.price;
-const target1Percent = ((coin.targets.target1 - currentPrice) / currentPrice * 100).toFixed(1);
-const target2Percent = ((coin.targets.target2 - currentPrice) / currentPrice * 100).toFixed(1);
-const target3Percent = ((coin.targets.target3 - currentPrice) / currentPrice * 100).toFixed(1);
-const longTermPercent = ((coin.targets.longTerm - currentPrice) / currentPrice * 100).toFixed(1);
-
-document.getElementById('priceTargets').innerHTML = `
-    <div class="target">الهدف الأول: $${this.formatNumber(coin.targets.target1)} (+${target1Percent}%)</div>
-    <div class="target">الهدف الثاني: $${this.formatNumber(coin.targets.target2)} (+${target2Percent}%)</div>
-    <div class="target">الهدف الثالث: $${this.formatNumber(coin.targets.target3)} (+${target3Percent}%)</div>
-    <div class="target long-term">الهدف طويل المدى: $${this.formatNumber(coin.targets.longTerm)} (+${longTermPercent}%)</div>
-`;
-
+        document.getElementById('priceTargets').innerHTML = `
+            <div class="target">الهدف الأول: $${this.formatNumber(coin.targets.target1)} (+5%)</div>
+            <div class="target">الهدف الثاني: $${this.formatNumber(coin.targets.target2)} (+10%)</div>
+            <div class="target">الهدف الثالث: $${this.formatNumber(coin.targets.target3)} (+15%)</div>
+            <div class="target">الهدف طويل المدى: $${this.formatNumber(coin.targets.longTerm)}</div>
+        `;
         
         // المؤشرات التفصيلية
         document.getElementById('indicatorsDetail').innerHTML = this.renderDetailedIndicators(coin.indicators);
@@ -1464,7 +1383,8 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     
     refreshButton.onmouseover = () => {
-             refreshButton.style.boxShadow = '0 6px 20px rgba(33, 150, 243, 0.4)';
+        refreshButton.style.transform = 'scale(1.05)';
+            refreshButton.style.boxShadow = '0 6px 20px rgba(33, 150, 243, 0.4)';
     };
     
     refreshButton.onmouseout = () => {
@@ -1510,4 +1430,5 @@ document.addEventListener('DOMContentLoaded', () => {
         window.cryptoAnalyzer = new CryptoAnalyzer();
     }
 });
+
 
