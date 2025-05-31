@@ -298,9 +298,7 @@ async fetchCoinMarketDataFallback(instrument) {
         }
     },
 
-    // دالة حساب الدعم والمقاومة المُصححة
-    calculateRealSupportResistanceLevels(candleData) {
-
+   
     async fetchCandleData(instId, timeframe = '1H', limit = 100) {
         try {
             const candleUrl = `${CONFIG.OKX_API.BASE_URL}/market/candles?instId=${instId}&bar=${timeframe}&limit=${limit}`;
