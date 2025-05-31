@@ -1,3 +1,4 @@
+
 class CryptoAnalyzer {
     constructor() {
         this.coins = [];
@@ -141,52 +142,58 @@ class CryptoAnalyzer {
         }
     }
 
-    async fetchCoinMarketData(instrument) {
-        try {
-            // جلب بيانات التيكر
-            const tickerUrl = `${CONFIG.OKX_API.BASE_URL}/market/ticker?instId=${instrument.instId}`;
-            const tickerResponse = await fetch(tickerUrl);
-            
-            if (!tickerResponse.ok) {
-                throw new Error(`HTTP Error: ${tickerResponse.status}`);
-            }
-            
-            const tickerData = await tickerResponse.json();
-            
-            if (tickerData.code !== '0' || !tickerData.data.length) {
-                return null;
-            }
-            
-            const ticker = tickerData.data[0];
-            
-            // التأكد من صحة البيانات
-            const price = parseFloat(ticker.last);
-            const volume24h = parseFloat(ticker.vol24h);
-            const high24h = parseFloat(ticker.high24h);
-            const low24h = parseFloat(ticker.low24h);
-            
-            if (isNaN(price) || isNaN(volume24h) || price <= 0 || volume24h <= 0) {
-                return null;
-            }
-            
-            return {
-                symbol: instrument.baseCcy,
-                instId: instrument.instId,
-                name: instrument.baseCcy,
-                price: price,
-                change24h: parseFloat(ticker.chgUtc0) || 0,
-                volume24h: volume24h * price, // حجم التداول بالدولار
-                high24h: high24h,
-                low24h: low24h,
-                openPrice: parseFloat(ticker.open24h) || price,
-                timestamp: Date.now()
-            };
-            
-        } catch (error) {
-            console.warn(`خطأ في جلب بيانات ${instrument.baseCcy}:`, error.message);
-            return null;
+   async fetchCoinMarketData(instrument) {
+    const timestamp = new Date().toISOString();
+    const method = 'GET';
+    const requestPath = `/api/v5/market/ticker?instId=${instrument}`;
+    
+    const signature = await this.generateSignature(timestamp, method, requestPath);
+    
+    const headers = {
+        'OK-ACCESS-KEY': OKX_CONFIG.API_KEY,
+        'OK-ACCESS-SIGN': signature,
+        'OK-ACCESS-TIMESTAMP': timestamp,
+        'OK-ACCESS-PASSPHRASE': OKX_CONFIG.PASSPHRASE,
+        'Content-Type': 'application/json'
+    };
+    
+    try {
+        const response = await fetch(`${OKX_CONFIG.BASE_URL}${requestPath}`, {
+            method: 'GET',
+            headers: headers
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
+        
+        const data = await response.json();
+        
+        if (data.code !== '0') {
+            throw new Error(`OKX API Error: ${data.msg}`);
+        }
+        
+        return data;
+        
+    } catch (error) {
+        console.error(`خطأ في جلب بيانات ${instrument}:`, error);
+        
+        // إعادة المحاولة مرة واحدة بعد تأخير
+        await this.delay(1000);
+        return this.fetchCoinMarketDataFallback(instrument);
     }
+}
+async fetchCoinMarketDataFallback(instrument) {
+    // استخدام API عام بدون مصادقة كخطة بديلة
+    try {
+        const response = await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${instrument}`);
+        return await response.json();
+    } catch (error) {
+        console.error(`فشل في جلب البيانات نهائياً لـ ${instrument}`);
+        return null;
+    }
+}
+
 
     async analyzeCoinWithRealData(coinData) {
         try {
