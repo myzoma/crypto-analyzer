@@ -53,7 +53,8 @@ class CryptoAnalyzer {
         
         // جلب البيانات الحقيقية من OKX
         const realData = await this.fetchRealDataFromOKX();
-        
+        console.log("📥 بيانات OKX المستلمة:", realData);
+
         // تحليل كل عملة
         const analyzedCoins = [];
         for (const coinData of realData) {
