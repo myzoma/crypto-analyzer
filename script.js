@@ -267,51 +267,52 @@ async fetchCoinMarketDataFallback(instrument) {
                 indicators.trendSignal = 'اتجاه قوي';
             }
             
-            // دالة حساب الدعم والمقاومة المُصححة
-    calculateRealSupportResistanceLevels(candleData) {
-        const closes = candleData.map(candle => parseFloat(candle[4]));
-        const highs = candleData.map(candle => parseFloat(candle[2]));
-        const lows = candleData.map(candle => parseFloat(candle[3]));
-        
-        const currentPrice = closes[closes.length - 1];
-        const high24h = Math.max(...highs.slice(-24));
-        const low24h = Math.min(...lows.slice(-24));
-        
-        // حساب مستويات الدعم والمقاومة
-        const supports = [];
-        const resistances = [];
-        
-        for (let i = 1; i < closes.length - 1; i++) {
-            if (closes[i] < closes[i-1] && closes[i] < closes[i+1]) {
-                if (closes[i] < currentPrice) supports.push(closes[i]);
-            }
-            if (closes[i] > closes[i-1] && closes[i] > closes[i+1]) {
-                if (closes[i] > currentPrice) resistances.push(closes[i]);
-            }
+    // دالة حساب الدعم والمقاومة المُصححة
+calculateRealSupportResistanceLevels(candleData) {
+    const closes = candleData.map(candle => parseFloat(candle[4]));
+    const highs = candleData.map(candle => parseFloat(candle[2]));
+    const lows = candleData.map(candle => parseFloat(candle[3]));
+    
+    const currentPrice = closes[closes.length - 1];
+    const high24h = Math.max(...highs.slice(-24));
+    const low24h = Math.min(...lows.slice(-24));
+    
+    // حساب مستويات الدعم والمقاومة
+    const supports = [];
+    const resistances = [];
+    
+    for (let i = 1; i < closes.length - 1; i++) {
+        if (closes[i] < closes[i-1] && closes[i] < closes[i+1]) {
+            if (closes[i] < currentPrice) supports.push(closes[i]);
         }
-        
-        supports.sort((a, b) => b - a);
-        resistances.sort((a, b) => a - b);
-        
-        let support1 = supports.length > 0 ? supports[0] : currentPrice * 0.95;
-        let support2 = supports.length > 1 ? supports[1] : currentPrice * 0.90;
-        let resistance1 = resistances.length > 0 ? resistances[0] : currentPrice * 1.05;
-        let resistance2 = resistances.length > 1 ? resistances[1] : currentPrice * 1.15;
-        
-        // التأكد من الترتيب الصحيح
-        if (support1 >= currentPrice) support1 = currentPrice * 0.95;
-        if (support2 >= support1) support2 = support1 * 0.95;
-        if (resistance1 <= currentPrice) resistance1 = currentPrice * 1.05;
-        if (resistance2 <= resistance1) resistance2 = resistance1 * 1.05;
-        
-        return {
-            support1,
-            support2,
-            resistance1,
-            resistance2,
-            pivot: (high24h + low24h + currentPrice) / 3
-        };
+        if (closes[i] > closes[i-1] && closes[i] > closes[i+1]) {
+            if (closes[i] > currentPrice) resistances.push(closes[i]);
+        }
     }
+    
+    supports.sort((a, b) => b - a);
+    resistances.sort((a, b) => a - b);
+    
+    let support1 = supports.length > 0 ? supports[0] : currentPrice * 0.95;
+    let support2 = supports.length > 1 ? supports[1] : currentPrice * 0.90;
+    let resistance1 = resistances.length > 0 ? resistances[0] : currentPrice * 1.05;
+    let resistance2 = resistances.length > 1 ? resistances[1] : currentPrice * 1.15;
+    
+    // التأكد من الترتيب الصحيح
+    if (support1 >= currentPrice) support1 = currentPrice * 0.95;
+    if (support2 >= support1) support2 = support1 * 0.95;
+    if (resistance1 <= currentPrice) resistance1 = currentPrice * 1.05;
+    if (resistance2 <= resistance1) resistance2 = resistance1 * 1.05;
+    
+    return {
+        support1,
+        support2,
+        resistance1,
+        resistance2,
+        pivot: (high24h + low24h + currentPrice) / 3
+    };
+}
+
 
     async fetchCandleData(instId, timeframe = '1H', limit = 100) {
         try {
