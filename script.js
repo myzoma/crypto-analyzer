@@ -277,12 +277,34 @@ async fetchCandleData(symbol, timeframe = '1H', limit = 100) {
                 score += CONFIG.SCORING.TREND_STRENGTH;
                 indicators.trendSignal = 'اتجاه قوي';
             }
-            
-            // حساب مستويات الدعم والمقاومة الحقيقية
-            const levels = this.calculateRealSupportResistanceLevels(candleData);
-            
-            // حساب الأهداف السعرية
-            validateTargets(targets, currentPrice) {
+           // حساب مستويات الدعم والمقاومة الحقيقية
+const levels = this.calculateRealSupportResistanceLevels(candleData);
+
+// حساب الأهداف السعرية
+const targets = this.calculatePriceTargets(coinData, levels);
+
+// التحقق من صحة الأهداف
+const validatedTargets = this.validateTargets(targets, coinData.price);
+
+// نقطة الدخول ووقف الخسارة
+const entryExit = this.calculateEntryExit(coinData, levels);
+
+return {
+    ...coinData,
+    score: Math.min(score, 100),
+    indicators,
+    levels,
+    targets: validatedTargets,
+    entryExit,
+    analysis: this.generateAnalysis(coinData, indicators, score),
+    lastAnalysis: Date.now()
+};
+
+} catch (error) {
+    console.error(`خطأ في تحليل ${coinData.symbol}:`, error);
+    return null;
+}
+validateTargets(targets, currentPrice) {
     // التأكد من الترتيب الصحيح
     if (targets.target1 <= currentPrice) targets.target1 = currentPrice * 1.05;
     if (targets.target2 <= targets.target1) targets.target2 = targets.target1 * 1.05;
@@ -291,27 +313,7 @@ async fetchCandleData(symbol, timeframe = '1H', limit = 100) {
     
     return targets;
 }
-            const targets = this.calculatePriceTargets(coinData, levels);
-            
-            // نقطة الدخول ووقف الخسارة
-            const entryExit = this.calculateEntryExit(coinData, levels);
-            
-            return {
-                ...coinData,
-                score: Math.min(score, 100),
-                indicators,
-                levels,
-                targets,
-                entryExit,
-                analysis: this.generateAnalysis(coinData, indicators, score),
-                lastAnalysis: Date.now()
-            };
-            
-        } catch (error) {
-            console.error(`خطأ في تحليل ${coinData.symbol}:`, error);
-            return null;
-        }
-    }
+
 
     async fetchCandleData(instId, timeframe = '1H', limit = 100) {
         try {
