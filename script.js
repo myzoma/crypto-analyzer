@@ -53,14 +53,13 @@ class CryptoAnalyzer {
         
         // جلب البيانات الحقيقية من OKX
         const realData = await this.fetchRealDataFromOKX();
-        console.log("📥 بيانات OKX المستلمة:", realData);
-
+        
         // تحليل كل عملة
         const analyzedCoins = [];
         for (const coinData of realData) {
             try {
                 const analysis = await this.analyzeCoinWithRealData(coinData);
-                if (analysis && analysis.score >= 50) {
+                if (analysis && analysis.score >= 30) {
                     analyzedCoins.push(analysis);
                 }
             } catch (error) {
@@ -107,7 +106,7 @@ class CryptoAnalyzer {
             const marketData = [];
             const batchSize = 20; // معالجة 20 عملة في كل مرة
             
-            for (let i = 0; i < Math.min(validInstruments.length, 200); i += batchSize) {
+            for (let i = 0; i < Math.min(validInstruments.length, 500); i += batchSize) {
                 const batch = validInstruments.slice(i, i + batchSize);
                 const batchPromises = batch.map(inst => this.fetchCoinMarketData(inst));
                 
@@ -200,7 +199,22 @@ async fetchCoinMarketDataFallback(instrument) {
         try {
             let score = 0;
             const indicators = {};
-            
+            // أضف هذا في نهاية حساب النقاط
+// نقاط إضافية للعملات النشطة
+if (coinData.volume24h > CONFIG.FILTERS.MIN_VOLUME * 2) {
+    score += 5; // نقاط إضافية للحجم العالي
+}
+
+// نقاط للتغيير الإيجابي
+if (coinData.change24h > 0) {
+    score += 5;
+}
+
+// نقاط للسعر المعقول
+if (coinData.price > 0.0001 && coinData.price < 1000) {
+    score += 5;
+}
+
             // جلب بيانات الشموع للتحليل الفني
             const candleData = await this.fetchCandleData(coinData.instId);
             if (!candleData || candleData.length < 50) {
