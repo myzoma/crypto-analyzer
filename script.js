@@ -140,6 +140,28 @@ class CryptoAnalyzer {
             throw new Error(`فشل في الاتصال بـ OKX API: ${error.message}`);
         }
     }
+async fetchCandleData(symbol, timeframe = '1H', limit = 100) {
+    const timestamp = new Date().toISOString();
+    const method = 'GET';
+    const requestPath = `/api/v5/market/candles?instId=${symbol}-USDT&bar=${timeframe}&limit=${limit}`;
+    
+    const signature = await this.generateSignature(timestamp, method, requestPath);
+    
+    const headers = {
+        'OK-ACCESS-KEY': OKX_CONFIG.API_KEY,
+        'OK-ACCESS-SIGN': signature,
+        'OK-ACCESS-TIMESTAMP': timestamp,
+        'OK-ACCESS-PASSPHRASE': OKX_CONFIG.PASSPHRASE,
+        'Content-Type': 'application/json'
+    };
+    
+    const response = await fetch(`${OKX_CONFIG.BASE_URL}${requestPath}`, {
+        method: 'GET',
+        headers: headers
+    });
+    
+    return await response.json();
+}
 
     async fetchCoinMarketData(instrument) {
         try {
@@ -312,6 +334,18 @@ class CryptoAnalyzer {
             return null;
         }
     }
+async generateSignature(timestamp, method, requestPath, body = '') {
+    const message = timestamp + method + requestPath + body;
+    const key = await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(OKX_CONFIG.SECRET_KEY),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+    );
+    const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
+    return btoa(String.fromCharCode(...new Uint8Array(signature)));
+}
 
     calculateRealRSI(candles, period = 14) {
         if (candles.length < period + 1) return 50;
