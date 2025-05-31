@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>استراتيجية التداول - مراقب العملات الرقمية</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 مراقب العملات الرقمية</h1>
+            <div class="update-info">
+                <span id="lastUpdate">آخر تحديث: --</span>
+                <span id="nextUpdate">التحديث التالي خلال: <span id="countdown">15:00</span></span>
+            </div>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h3>العملات المرشحة</h3>
+                <span id="totalCoins">0</span>
+            </div>
+            <div class="stat-card">
+                <h3>متوسط النقاط</h3>
+                <span id="avgScore">0</span>
+            </div>
+            <div class="stat-card">
+                <h3>أفضل عملة</h3>
+                <span id="topCoin">--</span>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>جاري تحليل العملات...</p>
+        </div>
+
+        <div class="coins-grid" id="coinsGrid">
+            <!-- البطاقات ستظهر هنا -->
+        </div>
+    </div>
+
+    <!-- النافذة المنبثقة -->
+    <div class="modal" id="coinModal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <div class="coin-logo">
+                    <span id="modalCoinSymbol"></span>
+                </div>
+                <div class="coin-info">
+                    <h2 id="modalCoinName"></h2>
+                    <p id="modalCoinPrice"></p>
+                </div>
+                <div class="coin-score">
+                    <span id="modalCoinScore"></span>
+                </div>
+            </div>
+            
+            <div class="modal-body">
+                <div class="analysis-section">
+                    <h3>📊 التحليل الفني</h3>
+                    <div id="technicalAnalysis"></div>
+                </div>
+                
+                <div class="levels-section">
+                    <h3>🎯 المستويات الحرجة</h3>
+                    <div class="levels-grid">
+                        <div class="level-card support">
+                            <h4>الدعم</h4>
+                            <span id="supportLevel">--</span>
+                        </div>
+                        <div class="level-card resistance">
+                            <h4>المقاومة</h4>
+                            <span id="resistanceLevel">--</span>
+                        </div>
+                        <div class="level-card entry">
+                            <h4>نقطة الدخول</h4>
+                            <span id="entryPoint">--</span>
+                        </div>
+                        <div class="level-card stop">
+                            <h4>وقف الخسارة</h4>
+                            <span id="stopLoss">--</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="targets-section">
+                    <h3>🚀 الأهداف السعرية</h3>
+                    <div id="priceTargets"></div>
+                </div>
+                
+                <div class="indicators-section">
+                    <h3>📈 المؤشرات الفنية</h3>
+                    <div id="indicatorsDetail"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
