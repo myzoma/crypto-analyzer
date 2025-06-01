@@ -49,7 +49,7 @@ class CryptoAnalyzer {
 
     async fetchAndAnalyzeCoins() {
         // محاكاة جلب البيانات من OKX API
-        const mockData = await this.getMockData();
+       const mockData = await this.fetchRealData();
         
         // تحليل كل عملة
         const analyzedCoins = [];
