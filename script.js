@@ -66,26 +66,36 @@ class CryptoAnalyzer {
             .slice(0, CONFIG.FILTERS.MAX_RESULTS);
     }
 
-  async getMockData() {
+ async getMockData() {
     try {
         const response = await fetch('https://www.okx.com/api/v5/market/tickers?instType=SPOT');
         const data = await response.json();
         
-        console.log('البيانات الخام:', data.data.slice(0, 3)); // للتحقق
+        console.log('البيانات الخام:', data.data.slice(0, 3));
         
-        return data.data
-            .filter(ticker => ticker.instId.endsWith('-USDT'))
-            .slice(0, 20)
+        const filteredData = data.data
+            .filter(ticker => {
+                // تصفية العملات التي تحتوي على البيانات المطلوبة
+                return ticker.instId.endsWith('-USDT') && 
+                       ticker.last && 
+                       ticker.volCcy24h && 
+                       parseFloat(ticker.volCcy24h) > 100000; // حجم تداول جيد
+            })
+            .slice(0, 50) // زيادة العدد للحصول على عملات أكثر
             .map(ticker => ({
                 symbol: ticker.instId.replace('-USDT', ''),
                 name: ticker.instId.replace('-USDT', ''),
                 price: parseFloat(ticker.last) || 0,
-                change24h: (parseFloat(ticker.chg24h) || 0) * 100, // ضرب في 100
+                change24h: ticker.chg24h ? (parseFloat(ticker.chg24h) * 100) : 0,
                 volume24h: parseFloat(ticker.volCcy24h) || 0,
                 high24h: parseFloat(ticker.high24h) || parseFloat(ticker.last) || 0,
                 low24h: parseFloat(ticker.low24h) || parseFloat(ticker.last) || 0,
-                marketCap: (parseFloat(ticker.volCcy24h) || 0) * 100
+                marketCap: (parseFloat(ticker.volCcy24h) || 0) * (parseFloat(ticker.last) || 0)
             }));
+            
+        console.log('العملات المفلترة:', filteredData.length);
+        return filteredData;
+        
     } catch (error) {
         console.error('خطأ في جلب البيانات:', error);
         // بيانات احتياطية
@@ -99,10 +109,21 @@ class CryptoAnalyzer {
                 high24h: 44000,
                 low24h: 42000,
                 marketCap: 850000000000
+            },
+            {
+                symbol: 'ETH',
+                name: 'Ethereum',
+                price: 2650.75,
+                change24h: 3.2,
+                volume24h: 8000000000,
+                high24h: 2700,
+                low24h: 2600,
+                marketCap: 320000000000
             }
         ];
     }
 }
+
 
 
   async analyzeCoin(coinData) {
