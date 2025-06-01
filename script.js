@@ -595,80 +595,67 @@ calculateLiquidity(coinData) {
         return html;
     }
 
-    showCoinDetails(coin) {
+   showCoinDetails(coin) {
+    try {
         const modal = document.getElementById('coinModal');
-        
-        // تحديث معلومات الرأس
-        document.getElementById('modalCoinSymbol').textContent = coin.symbol.charAt(0);
-        document.getElementById('modalCoinName').textContent = coin.symbol;
-        document.getElementById('modalCoinPrice').textContent = `$${this.formatNumber(coin.price)}`;
-        document.getElementById('modalCoinScore').textContent = coin.score.toFixed(0);
-        
-        // التحليل الفني
-        document.getElementById('technicalAnalysis').innerHTML = `
-            <p>${coin.analysis}</p>
-        `;
-        
-        // المستويات الحرجة
-        document.getElementById('supportLevel').textContent = `$${this.formatNumber(coin.levels.support1)}`;
-        document.getElementById('resistanceLevel').textContent = `$${this.formatNumber(coin.levels.resistance1)}`;
-        document.getElementById('entryPoint').textContent = `$${this.formatNumber(coin.entryExit.entryPoint)}`;
-        document.getElementById('stopLoss').textContent = `$${this.formatNumber(coin.entryExit.stopLoss)}`;
-        
-        // الأهداف السعرية
-        document.getElementById('priceTargets').innerHTML = `
-            <div class="target">الهدف الأول: $${this.formatNumber(coin.targets.target1)}</div>
-            <div class="target">الهدف الثاني: $${this.formatNumber(coin.targets.target2)}</div>
-            <div class="target">الهدف الثالث: $${this.formatNumber(coin.targets.target3)}</div>
-            <div class="target">الهدف طويل المدى: $${this.formatNumber(coin.targets.longTerm)}</div>
-        `;
-        
-        // المؤشرات التفصيلية
-        document.getElementById('indicatorsDetail').innerHTML = this.renderDetailedIndicators(coin.indicators);
-        
-        modal.style.display = 'block';
-    }
+        if (!modal) {
+            console.error('النافذة المنبثقة غير موجودة في HTML');
+            return;
+        }
 
-    renderDetailedIndicators(indicators) {
-        return `
-            <div class="indicator-item">
-                <h4>مؤشر القوة النسبية (RSI)</h4>
-                <div class="indicator-value ${this.getIndicatorClass(indicators.rsi, 50, 70)}">
-                    ${indicators.rsi.toFixed(2)}
-                </div>
-            </div>
-            <div class="indicator-item">
-                <h4>MACD</h4>
-                <div class="indicator-value ${indicators.macd.signal === 'bullish' ? 'bullish' : 'bearish'}">
-                    ${indicators.macd.signal === 'bullish' ? 'صعودي' : 'هبوطي'}
-                </div>
-            </div>
-            <div class="indicator-item">
-                <h4>المتوسط المتحرك البسيط</h4>
-                <div class="indicator-value bullish">
-                    $${this.formatNumber(indicators.sma)}
-                </div>
-            </div>
-            <div class="indicator-item">
-                <h4>قوة الاتجاه</h4>
-                <div class="indicator-value ${this.getIndicatorClass(indicators.trendStrength, 40, 70)}">
-                    ${indicators.trendStrength.toFixed(1)}%
-                </div>
-            </div>
-            <div class="indicator-item">
-                <h4>مؤشر السيولة</h4>
-                <div class="indicator-value ${indicators.liquidity > 0 ? 'bullish' : 'bearish'}">
-                    ${indicators.liquidity > 0 ? 'إيجابي' : 'سلبي'}
-                </div>
-            </div>
-            <div class="indicator-item">
-                <h4>زيادة الحجم</h4>
-                <div class="indicator-value ${indicators.volumeIncrease > 20 ? 'bullish' : 'neutral'}">
-                    +${indicators.volumeIncrease.toFixed(1)}%
-                </div>
-            </div>
-        `;
+        // تحديث معلومات الرأس بأمان
+        const modalCoinSymbol = document.getElementById('modalCoinSymbol');
+        const modalCoinName = document.getElementById('modalCoinName');
+        const modalCoinPrice = document.getElementById('modalCoinPrice');
+        const modalCoinScore = document.getElementById('modalCoinScore');
+
+        if (modalCoinSymbol) modalCoinSymbol.textContent = coin.symbol.charAt(0);
+        if (modalCoinName) modalCoinName.textContent = coin.symbol;
+        if (modalCoinPrice) modalCoinPrice.textContent = `$${this.formatNumber(coin.price)}`;
+        if (modalCoinScore) modalCoinScore.textContent = coin.score.toFixed(0);
+
+        // التحليل الفني
+        const technicalAnalysis = document.getElementById('technicalAnalysis');
+        if (technicalAnalysis) {
+            technicalAnalysis.innerHTML = `<p>${coin.analysis || 'تحليل غير متوفر'}</p>`;
+        }
+
+        // المستويات الحرجة
+        const supportLevel = document.getElementById('supportLevel');
+        const resistanceLevel = document.getElementById('resistanceLevel');
+        const entryPoint = document.getElementById('entryPoint');
+        const stopLoss = document.getElementById('stopLoss');
+
+        if (supportLevel) supportLevel.textContent = `$${this.formatNumber(coin.levels?.support1 || coin.price * 0.95)}`;
+        if (resistanceLevel) resistanceLevel.textContent = `$${this.formatNumber(coin.levels?.resistance1 || coin.price * 1.05)}`;
+        if (entryPoint) entryPoint.textContent = `$${this.formatNumber(coin.entryExit?.entryPoint || coin.price * 1.002)}`;
+        if (stopLoss) stopLoss.textContent = `$${this.formatNumber(coin.entryExit?.stopLoss || coin.price * 0.97)}`;
+
+        // الأهداف السعرية
+        const priceTargets = document.getElementById('priceTargets');
+        if (priceTargets) {
+            priceTargets.innerHTML = `
+                <div class="target">الهدف الأول: $${this.formatNumber(coin.targets?.target1 || coin.price * 1.05)}</div>
+                <div class="target">الهدف الثاني: $${this.formatNumber(coin.targets?.target2 || coin.price * 1.10)}</div>
+                <div class="target">الهدف الثالث: $${this.formatNumber(coin.targets?.target3 || coin.price * 1.15)}</div>
+                <div class="target">الهدف طويل المدى: $${this.formatNumber(coin.targets?.longTerm || coin.price * 1.20)}</div>
+            `;
+        }
+
+        // المؤشرات التفصيلية
+        const indicatorsDetail = document.getElementById('indicatorsDetail');
+        if (indicatorsDetail) {
+            indicatorsDetail.innerHTML = this.renderDetailedIndicators(coin.indicators || {});
+        }
+
+        modal.style.display = 'block';
+        
+    } catch (error) {
+        console.error('خطأ في فتح النافذة:', error);
+        alert(`تفاصيل ${coin.symbol}:\nالسعر: $${this.formatNumber(coin.price)}\nالنقاط: ${coin.score.toFixed(0)}\nالتحليل: ${coin.analysis || 'غير متوفر'}`);
     }
+}
+
 
     getIndicatorClass(value, lowThreshold, highThreshold) {
         if (value >= highThreshold) return 'bullish';
