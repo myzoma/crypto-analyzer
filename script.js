@@ -123,84 +123,92 @@ class CryptoAnalyzer {
     }
 
     async analyzeCoin(coinData) {
-        let score = 0;
-        const indicators = {};
-        
-        // 1. تحليل RSI
-        const rsi = this.calculateRSI(coinData);
-        indicators.rsi = rsi;
-        if (rsi > CONFIG.INDICATORS.RSI.BREAKOUT_LEVEL && rsi < 70) {
-            score += CONFIG.SCORING.RSI_BREAKOUT;
-            indicators.rsiSignal = 'اختراق صعودي';
-        }
-        
-        // 2. تحليل MACD
-        const macd = this.calculateMACD(coinData);
-        indicators.macd = macd;
-        if (macd.signal === 'bullish') {
-            score += CONFIG.SCORING.MACD_SIGNAL;
-            indicators.macdSignal = 'إشارة صعودية';
-        }
-        
-        // 3. تحليل المتوسط المتحرك
-        const sma = this.calculateSMA(coinData);
-        indicators.sma = sma;
-        if (coinData.price > sma) {
-            score += CONFIG.SCORING.SMA_BREAKOUT;
-            indicators.smaSignal = 'فوق المتوسط المتحرك';
-        }
-        
-        // 4. تحليل المقاومة
-        const resistance = this.calculateResistance(coinData);
-        indicators.resistance = resistance;
-        if (coinData.price >= resistance * 0.98) { // قريب من المقاومة
-            score += CONFIG.SCORING.RESISTANCE_BREAK;
-            indicators.resistanceSignal = 'اقتراب من المقاومة';
-        }
-        
-        // 5. مؤشر السيولة
-        const liquidity = this.calculateLiquidity(coinData);
-        indicators.liquidity = liquidity;
-        if (liquidity > 0) {
-            score += CONFIG.SCORING.LIQUIDITY_CROSS;
-            indicators.liquiditySignal = 'تقاطع صعودي';
-        }
-        
-        // 6. حجم التداول
-        const volumeIncrease = this.calculateVolumeIncrease(coinData);
-        indicators.volumeIncrease = volumeIncrease;
-        if (volumeIncrease > 20) { // زيادة 20% في الحجم
-            score += CONFIG.SCORING.VOLUME_INCREASE;
-            indicators.volumeSignal = `زيادة ${volumeIncrease.toFixed(1)}%`;
-        }
-        
-        // 7. قوة الاتجاه
-        const trendStrength = this.calculateTrendStrength(coinData);
-        indicators.trendStrength = trendStrength;
-        if (trendStrength > 60) {
-            score += CONFIG.SCORING.TREND_STRENGTH;
-            indicators.trendSignal = 'اتجاه قوي';
-        }
-        
-        // حساب مستويات الدعم والمقاومة
-        const levels = this.calculateSupportResistanceLevels(coinData);
-        
-        // حساب الأهداف السعرية
-        const targets = this.calculatePriceTargets(coinData, levels);
-        
-        // نقطة الدخول ووقف الخسارة
-        const entryExit = this.calculateEntryExit(coinData, levels);
-        
-        return {
-            ...coinData,
-            score: Math.min(score, 100), // الحد الأقصى 100 نقطة
-            indicators,
-            levels,
-            targets,
-            entryExit,
-            analysis: this.generateAnalysis(coinData, indicators, score)
-        };
+    let score = 0;
+    const indicators = {};
+
+    // 1. تحليل التغيير اليومي (وزن أكبر)
+    const change24h = isNaN(coinData.change24h) ? 0 : coinData.change24h;
+    if (change24h > 5) {
+        score += 30; // صعود قوي
+        indicators.changeSignal = 'صعود قوي +5%';
+    } else if (change24h > 2) {
+        score += 20; // صعود متوسط
+        indicators.changeSignal = 'صعود متوسط +2%';
+    } else if (change24h > 0) {
+        score += 10; // صعود خفيف
+        indicators.changeSignal = 'صعود خفيف';
+    } else if (change24h > -2) {
+        score += 5; // استقرار
+        indicators.changeSignal = 'مستقر';
     }
+
+    // 2. تحليل الحجم (معيار مهم)
+    const volume24h = isNaN(coinData.volume24h) ? 0 : coinData.volume24h;
+    if (volume24h > 10000000) {
+        score += 25; // حجم ممتاز
+        indicators.volumeSignal = 'حجم تداول ممتاز';
+    } else if (volume24h > 1000000) {
+        score += 15; // حجم جيد
+        indicators.volumeSignal = 'حجم تداول جيد';
+    } else if (volume24h > 100000) {
+        score += 8; // حجم متوسط
+        indicators.volumeSignal = 'حجم تداول متوسط';
+    }
+
+    // 3. تحليل السعر والاستقرار
+    const price = isNaN(coinData.price) ? 0 : coinData.price;
+    const high24h = isNaN(coinData.high24h) ? price : coinData.high24h;
+    const low24h = isNaN(coinData.low24h) ? price : coinData.low24h;
+    
+    const pricePosition = (price - low24h) / (high24h - low24h);
+    if (pricePosition > 0.7) {
+        score += 15; // قريب من القمة
+        indicators.priceSignal = 'قريب من أعلى سعر';
+    } else if (pricePosition > 0.3) {
+        score += 20; // في المنتصف (مثالي)
+        indicators.priceSignal = 'موقع سعري مثالي';
+    } else {
+        score += 10; // قريب من القاع
+        indicators.priceSignal = 'قريب من أدنى سعر';
+    }
+
+    // 4. مؤشرات فنية محسنة
+    const rsi = this.calculateRSI(coinData);
+    if (rsi >= 40 && rsi <= 65) {
+        score += 15; // RSI مثالي
+        indicators.rsiSignal = 'RSI في المنطقة المثالية';
+    } else if (rsi >= 30 && rsi <= 70) {
+        score += 8; // RSI جيد
+        indicators.rsiSignal = 'RSI في منطقة جيدة';
+    }
+
+    // 5. تحليل الزخم
+    const momentum = change24h * (volume24h / 1000000);
+    if (momentum > 50) {
+        score += 15;
+        indicators.momentumSignal = 'زخم قوي جداً';
+    } else if (momentum > 10) {
+        score += 10;
+        indicators.momentumSignal = 'زخم جيد';
+    }
+
+    // باقي الحسابات...
+    const levels = this.calculateAdvancedLevels(coinData);
+    const targets = this.calculateSmartTargets(coinData, levels);
+    const entryExit = this.calculateAdvancedEntry(coinData, levels);
+
+    return {
+        ...coinData,
+        score: Math.min(score, 100),
+        indicators,
+        levels,
+        targets,
+        entryExit,
+        strategy: 'Enhanced Multi-Factor Analysis',
+        analysis: this.generateAdvancedAnalysis(coinData, indicators, score)
+    };
+}
+
 
     calculateRSI(coinData) {
         // محاكاة حساب RSI
