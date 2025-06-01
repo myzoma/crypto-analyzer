@@ -171,6 +171,35 @@ class CryptoAnalyzer {
     return Math.max(20, Math.min(80, baseRSI + Math.random() * 10));
 }
 
+calculateMACD(coinData) {
+    const change24h = isNaN(coinData.change24h) ? 0 : coinData.change24h;
+    const macdValue = change24h > 2 ? 'bullish' : 'bearish';
+    return {
+        value: change24h * 0.1,
+        signal: macdValue,
+        histogram: Math.random() * 2 - 1
+    };
+}
+
+calculateSMA(coinData) {
+    const price = isNaN(coinData.price) ? 0 : coinData.price;
+    return price * (0.95 + Math.random() * 0.1);
+}
+
+calculateResistance(coinData) {
+    const high24h = isNaN(coinData.high24h) ? coinData.price : coinData.high24h;
+    return high24h * (1 + Math.random() * 0.05);
+}
+
+calculateLiquidity(coinData) {
+    const volume24h = isNaN(coinData.volume24h) ? 0 : coinData.volume24h;
+    return volume24h > 100000 ? Math.random() * 2 - 1 : -1;
+}
+
+calculateVolumeIncrease(coinData) {
+    return Math.random() * 50;
+}
+
 calculateTrendStrength(coinData) {
     const change24h = isNaN(coinData.change24h) ? 0 : coinData.change24h;
     return Math.abs(change24h) * 10 + Math.random() * 20;
@@ -189,6 +218,7 @@ calculateSupportResistanceLevels(coinData) {
         pivot: (high24h + low24h + currentPrice) / 3
     };
 }
+
 
 calculateLiquidity(coinData) {
     const volume24h = isNaN(coinData.volume24h) ? 0 : coinData.volume24h;
