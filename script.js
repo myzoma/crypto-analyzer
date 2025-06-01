@@ -521,7 +521,7 @@ calculateLiquidity(coinData) {
                 <div class="detail-item">
                     <div class="label">التغيير 24س</div>
                     <div class="value change ${changeClass}">
-                        ${changeSymbol}${coin.change24h.toFixed(2)}%
+                       ${changeSymbol}${(coin.change24h || 0).toFixed(2)}%
                     </div>
                 </div>
                 <div class="detail-item">
