@@ -1084,26 +1084,3 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 تم تشغيل مراقب العملات الرقمية بنجاح!');
 });
 
-async startAnalysis() {
-    console.log('بدء التحليل...'); // أضف هذا
-    
-    this.isAnalyzing = true;
-    this.updateUI();
-    
-    try {
-        console.log('استدعاء fetchAndAnalyzeCoins...'); // أضف هذا
-        await this.fetchAndAnalyzeCoins();
-        console.log('انتهى fetchAndAnalyzeCoins، عدد العملات:', this.coins.length); // أضف هذا
-        
-        this.renderCoins();
-        this.updateStats();
-        this.updateLastUpdate();
-    } catch (error) {
-        console.error('خطأ في التحليل:', error); // أضف هذا
-        this.showError('حدث خطأ أثناء التحليل: ' + error.message);
-    } finally {
-        this.isAnalyzing = false;
-        this.updateUI();
-        console.log('انتهى التحليل'); // أضف هذا
-    }
-}
