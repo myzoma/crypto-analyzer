@@ -595,11 +595,17 @@ calculateLiquidity(coinData) {
         return html;
     }
 
-   showCoinDetails(coin) {
+  showCoinDetails(coin) {
     try {
         const modal = document.getElementById('coinModal');
         if (!modal) {
             console.error('النافذة المنبثقة غير موجودة في HTML');
+            return;
+        }
+
+        // التحقق من وجود البيانات
+        if (!coin || !coin.symbol) {
+            console.error('بيانات العملة غير صحيحة:', coin);
             return;
         }
 
@@ -611,8 +617,8 @@ calculateLiquidity(coinData) {
 
         if (modalCoinSymbol) modalCoinSymbol.textContent = coin.symbol.charAt(0);
         if (modalCoinName) modalCoinName.textContent = coin.symbol;
-        if (modalCoinPrice) modalCoinPrice.textContent = `$${this.formatNumber(coin.price)}`;
-        if (modalCoinScore) modalCoinScore.textContent = coin.score.toFixed(0);
+        if (modalCoinPrice) modalCoinPrice.textContent = `$${this.formatNumber(coin.price || 0)}`;
+        if (modalCoinScore) modalCoinScore.textContent = (coin.score || 0).toFixed(0);
 
         // التحليل الفني
         const technicalAnalysis = document.getElementById('technicalAnalysis');
@@ -620,25 +626,26 @@ calculateLiquidity(coinData) {
             technicalAnalysis.innerHTML = `<p>${coin.analysis || 'تحليل غير متوفر'}</p>`;
         }
 
-        // المستويات الحرجة
+        // المستويات الحرجة مع قيم افتراضية آمنة
+        const price = coin.price || 0;
         const supportLevel = document.getElementById('supportLevel');
         const resistanceLevel = document.getElementById('resistanceLevel');
         const entryPoint = document.getElementById('entryPoint');
         const stopLoss = document.getElementById('stopLoss');
 
-        if (supportLevel) supportLevel.textContent = `$${this.formatNumber(coin.levels?.support1 || coin.price * 0.95)}`;
-        if (resistanceLevel) resistanceLevel.textContent = `$${this.formatNumber(coin.levels?.resistance1 || coin.price * 1.05)}`;
-        if (entryPoint) entryPoint.textContent = `$${this.formatNumber(coin.entryExit?.entryPoint || coin.price * 1.002)}`;
-        if (stopLoss) stopLoss.textContent = `$${this.formatNumber(coin.entryExit?.stopLoss || coin.price * 0.97)}`;
+        if (supportLevel) supportLevel.textContent = `$${this.formatNumber((coin.levels?.support1) || (price * 0.95))}`;
+        if (resistanceLevel) resistanceLevel.textContent = `$${this.formatNumber((coin.levels?.resistance1) || (price * 1.05))}`;
+        if (entryPoint) entryPoint.textContent = `$${this.formatNumber((coin.entryExit?.entryPoint) || (price * 1.002))}`;
+        if (stopLoss) stopLoss.textContent = `$${this.formatNumber((coin.entryExit?.stopLoss) || (price * 0.97))}`;
 
         // الأهداف السعرية
         const priceTargets = document.getElementById('priceTargets');
         if (priceTargets) {
             priceTargets.innerHTML = `
-                <div class="target">الهدف الأول: $${this.formatNumber(coin.targets?.target1 || coin.price * 1.05)}</div>
-                <div class="target">الهدف الثاني: $${this.formatNumber(coin.targets?.target2 || coin.price * 1.10)}</div>
-                <div class="target">الهدف الثالث: $${this.formatNumber(coin.targets?.target3 || coin.price * 1.15)}</div>
-                <div class="target">الهدف طويل المدى: $${this.formatNumber(coin.targets?.longTerm || coin.price * 1.20)}</div>
+                <div class="target">الهدف الأول: $${this.formatNumber((coin.targets?.target1) || (price * 1.05))}</div>
+                <div class="target">الهدف الثاني: $${this.formatNumber((coin.targets?.target2) || (price * 1.10))}</div>
+                <div class="target">الهدف الثالث: $${this.formatNumber((coin.targets?.target3) || (price * 1.15))}</div>
+                <div class="target">الهدف طويل المدى: $${this.formatNumber((coin.targets?.longTerm) || (price * 1.20))}</div>
             `;
         }
 
@@ -652,9 +659,12 @@ calculateLiquidity(coinData) {
         
     } catch (error) {
         console.error('خطأ في فتح النافذة:', error);
-        alert(`تفاصيل ${coin.symbol}:\nالسعر: $${this.formatNumber(coin.price)}\nالنقاط: ${coin.score.toFixed(0)}\nالتحليل: ${coin.analysis || 'غير متوفر'}`);
+        const price = coin?.price || 0;
+        const score = coin?.score || 0;
+        alert(`تفاصيل ${coin?.symbol || 'غير معروف'}:\nالسعر: $${this.formatNumber(price)}\nالنقاط: ${score.toFixed(0)}\nالتحليل: ${coin?.analysis || 'غير متوفر'}`);
     }
 }
+
 
 
     getIndicatorClass(value, lowThreshold, highThreshold) {
@@ -739,28 +749,31 @@ calculateLiquidity(coinData) {
     }
 
     formatNumber(num) {
-        if (num >= 1000000) {
-            return (num / 1000000).toFixed(2) + 'M';
-        } else if (num >= 1000) {
-            return (num / 1000).toFixed(2) + 'K';
-        } else if (num < 1) {
-            return num.toFixed(6);
-        } else {
-            return num.toFixed(2);
-        }
+    // التحقق من صحة القيمة
+    if (num === null || num === undefined || isNaN(num)) {
+        return '0.00';
     }
+    
+    const number = parseFloat(num);
+    if (isNaN(number)) {
+        return '0.00';
+    }
+    
+    if (number >= 1000000000) {
+        return (number / 1000000000).toFixed(2) + 'B';
+    } else if (number >= 1000000) {
+        return (number / 1000000).toFixed(2) + 'M';
+    } else if (number >= 1000) {
+        return (number / 1000).toFixed(2) + 'K';
+    } else if (number >= 1) {
+        return number.toFixed(2);
+    } else if (number >= 0.01) {
+        return number.toFixed(4);
+    } else {
+        return number.toFixed(8);
+    }
+}
 
-    formatVolume(volume) {
-        if (volume >= 1000000000) {
-            return (volume / 1000000000).toFixed(2) + 'B';
-        } else if (volume >= 1000000) {
-            return (volume / 1000000).toFixed(2) + 'M';
-        } else if (volume >= 1000) {
-            return (volume / 1000).toFixed(2) + 'K';
-        } else {
-            return volume.toFixed(2);
-        }
-    }
 
     // دالة لجلب البيانات الحقيقية من OKX API
     async fetchRealData() {
