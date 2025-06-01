@@ -479,68 +479,59 @@ calculateLiquidity(coinData) {
         return analysis;
     }
 
-    renderCoins() {
-        const grid = document.getElementById('coinsGrid');
-        grid.innerHTML = '';
-        
-        this.coins.forEach((coin, index) => {
-            const card = this.createCoinCard(coin, index + 1);
-            grid.appendChild(card);
-        });
-        
-        grid.classList.add('fade-in');
-    }
-
     createCoinCard(coin, rank) {
-        const card = document.createElement('div');
-        card.className = 'coin-card';
-        card.onclick = () => this.showCoinDetails(coin);
+    const card = document.createElement('div');
+    card.className = 'coin-card';
+    card.onclick = () => this.showCoinDetails(coin);
+    
+    // إصلاح نسبة التغيير
+    const change24h = isNaN(coin.change24h) ? 0 : coin.change24h;
+    const changeClass = change24h >= 0 ? 'positive' : 'negative';
+    const changeSymbol = change24h >= 0 ? '+' : '';
+    
+    card.innerHTML = `
+        <div class="coin-header">
+            <div class="coin-logo">
+                <span>${coin.symbol.charAt(0)}</span>
+            </div>
+            <div class="coin-name">
+                <h3>${coin.symbol}</h3>
+                <span class="rank">المركز ${rank}</span>
+            </div>
+            <div class="coin-score">
+                ${coin.score.toFixed(0)}
+            </div>
+        </div>
         
-        const changeClass = coin.change24h >= 0 ? 'positive' : 'negative';
-        const changeSymbol = coin.change24h >= 0 ? '+' : '';
-        
-        card.innerHTML = `
-            <div class="coin-header">
-                <div class="coin-logo">
-                    <span>${coin.symbol.charAt(0)}</span>
-                </div>
-                <div class="coin-name">
-                    <h3>${coin.symbol}</h3>
-                    <span class="rank">المركز ${rank}</span>
-                </div>
-                <div class="coin-score">
-                    ${coin.score.toFixed(0)}
+        <div class="coin-details">
+            <div class="detail-item">
+                <div class="label">السعر الحالي</div>
+                <div class="value price">$${this.formatNumber(coin.price)}</div>
+            </div>
+            <div class="detail-item">
+                <div class="label">التغيير 24س</div>
+                <div class="value change ${changeClass}">
+                    ${changeSymbol}${change24h.toFixed(2)}%
                 </div>
             </div>
-            
-            <div class="coin-details">
-                <div class="detail-item">
-                    <div class="label">السعر الحالي</div>
-                    <div class="value price">$${this.formatNumber(coin.price)}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="label">التغيير 24س</div>
-                    <div class="value change ${changeClass}">
-                        ${changeSymbol}${coin.change24h.toFixed(2)}%
-                    </div>
-                </div>
-                <div class="detail-item">
-                    <div class="label">حجم التداول</div>
-                    <div class="value volume">$${this.formatVolume(coin.volume24h)}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="label">القيمة السوقية</div>
-                    <div class="value">$${this.formatVolume(coin.marketCap)}</div>
-                </div>
+            <div class="detail-item">
+                <div class="label">حجم التداول</div>
+                <div class="value volume">$${this.formatVolume(coin.volume24h)}</div>
             </div>
-            
-            <div class="indicators">
-                ${this.renderIndicators(coin.indicators)}
+            <div class="detail-item">
+                <div class="label">القيمة السوقية</div>
+                <div class="value">$${this.formatVolume(coin.marketCap)}</div>
             </div>
-        `;
+        </div>
         
-        return card;
-    }
+        <div class="indicators">
+            ${this.renderIndicators(coin.indicators)}
+        </div>
+    `;
+    
+    return card;
+}
+
 
     renderIndicators(indicators) {
         let html = '';
