@@ -1454,30 +1454,36 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// دالة اختبار مبسطة
-async function testAPIConnection() {
-    console.log('🧪 اختبار الاتصال بـ API...');
+// أضف هذا الكود لفحص البيانات الخام
+async function debugOKXData() {
+    console.log('🔍 فحص تفصيلي للبيانات...');
     
     try {
         const response = await fetch('https://www.okx.com/api/v5/market/tickers?instType=SPOT');
         const data = await response.json();
         
-        console.log('📊 نتائج الاختبار:', {
+        console.log('📊 تفاصيل الاستجابة:', {
             status: response.status,
-            ok: response.ok,
             code: data.code,
             message: data.msg,
-            dataCount: data.data?.length || 0,
-            firstItem: data.data?.[0] || null
+            totalPairs: data.data?.length
         });
         
-        return data;
+        // طباعة أول 5 عناصر للفحص
+        if (data.data && data.data.length > 0) {
+            console.log('📋 أول 5 عناصر من البيانات:');
+            for (let i = 0; i < Math.min(5, data.data.length); i++) {
+                console.log(`العنصر ${i + 1}:`, data.data[i]);
+            }
+        }
+        
+        return data.data;
         
     } catch (error) {
-        console.error('❌ فشل الاختبار:', error);
-        return null;
+        console.error('❌ خطأ في الفحص:', error);
+        return [];
     }
 }
 
-// تشغيل الاختبار
-testAPIConnection();
+// شغل هذه الدالة
+debugOKXData();
