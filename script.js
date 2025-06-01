@@ -1084,26 +1084,26 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 تم تشغيل مراقب العملات الرقمية بنجاح!');
 });
 
-async fetchAndAnalyzeCoins() {
-    console.log('بدء جلب البيانات...'); // أضف هذا
-    const mockData = await this.getMockData();
-    console.log('البيانات المستلمة:', mockData.length); // أضف هذا
+async startAnalysis() {
+    console.log('بدء التحليل...'); // أضف هذا
     
-    const analyzedCoins = [];
-    for (const coinData of mockData) {
-        const analysis = await this.analyzeCoin(coinData);
-        console.log(`${coinData.symbol}: نقاط ${analysis.score}`); // أضف هذا
+    this.isAnalyzing = true;
+    this.updateUI();
+    
+    try {
+        console.log('استدعاء fetchAndAnalyzeCoins...'); // أضف هذا
+        await this.fetchAndAnalyzeCoins();
+        console.log('انتهى fetchAndAnalyzeCoins، عدد العملات:', this.coins.length); // أضف هذا
         
-        if (analysis.score >= 50) {
-            analyzedCoins.push(analysis);
-        }
+        this.renderCoins();
+        this.updateStats();
+        this.updateLastUpdate();
+    } catch (error) {
+        console.error('خطأ في التحليل:', error); // أضف هذا
+        this.showError('حدث خطأ أثناء التحليل: ' + error.message);
+    } finally {
+        this.isAnalyzing = false;
+        this.updateUI();
+        console.log('انتهى التحليل'); // أضف هذا
     }
-    
-    console.log('العملات المقبولة:', analyzedCoins.length); // أضف هذا
-    
-    this.coins = analyzedCoins
-        .sort((a, b) => b.score - a.score)
-        .slice(0, CONFIG.FILTERS.MAX_RESULTS);
-        
-    console.log('العملات النهائية:', this.coins.length); // أضف هذا
 }
