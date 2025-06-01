@@ -67,23 +67,43 @@ class CryptoAnalyzer {
     }
 
   async getMockData() {
-    const response = await fetch('https://www.okx.com/api/v5/market/tickers?instType=SPOT');
-    const data = await response.json();
-    
-    return data.data
-        .filter(ticker => ticker.instId.endsWith('-USDT'))
-        .slice(0, 20)
-        .map(ticker => ({
-            symbol: ticker.instId.replace('-USDT', ''),
-            name: ticker.instId.replace('-USDT', ''),
-            price: parseFloat(ticker.last),
-            change24h: parseFloat(ticker.chg24h) * 100,
-            volume24h: parseFloat(ticker.volCcy24h),
-            high24h: parseFloat(ticker.high24h),
-            low24h: parseFloat(ticker.low24h),
-            marketCap: parseFloat(ticker.volCcy24h) * 100
-        }));
+    try {
+        const response = await fetch('https://www.okx.com/api/v5/market/tickers?instType=SPOT');
+        const data = await response.json();
+        
+        console.log('البيانات الخام:', data.data.slice(0, 3)); // للتحقق
+        
+        return data.data
+            .filter(ticker => ticker.instId.endsWith('-USDT'))
+            .slice(0, 20)
+            .map(ticker => ({
+                symbol: ticker.instId.replace('-USDT', ''),
+                name: ticker.instId.replace('-USDT', ''),
+                price: parseFloat(ticker.last) || 0,
+                change24h: (parseFloat(ticker.chg24h) || 0) * 100, // ضرب في 100
+                volume24h: parseFloat(ticker.volCcy24h) || 0,
+                high24h: parseFloat(ticker.high24h) || parseFloat(ticker.last) || 0,
+                low24h: parseFloat(ticker.low24h) || parseFloat(ticker.last) || 0,
+                marketCap: (parseFloat(ticker.volCcy24h) || 0) * 100
+            }));
+    } catch (error) {
+        console.error('خطأ في جلب البيانات:', error);
+        // بيانات احتياطية
+        return [
+            {
+                symbol: 'BTC',
+                name: 'Bitcoin',
+                price: 43250.50,
+                change24h: 2.5,
+                volume24h: 15000000000,
+                high24h: 44000,
+                low24h: 42000,
+                marketCap: 850000000000
+            }
+        ];
+    }
 }
+
 
   async analyzeCoin(coinData) {
     let score = 0;
