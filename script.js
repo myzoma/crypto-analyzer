@@ -165,60 +165,36 @@ class CryptoAnalyzer {
         };
     }
 
-    calculateRSI(coinData) {
-        // محاكاة حساب RSI
-        const baseRSI = 45 + (coinData.change24h * 2);
-        return Math.max(20, Math.min(80, baseRSI + Math.random() * 10));
-    }
+   calculateRSI(coinData) {
+    const change24h = isNaN(coinData.change24h) ? 0 : coinData.change24h;
+    const baseRSI = 45 + (change24h * 2);
+    return Math.max(20, Math.min(80, baseRSI + Math.random() * 10));
+}
 
-    calculateMACD(coinData) {
-        // محاكاة حساب MACD
-        const macdValue = coinData.change24h > 2 ? 'bullish' : 'bearish';
-        return {
-            value: coinData.change24h * 0.1,
-            signal: macdValue,
-            histogram: Math.random() * 2 - 1
-        };
-    }
+calculateTrendStrength(coinData) {
+    const change24h = isNaN(coinData.change24h) ? 0 : coinData.change24h;
+    return Math.abs(change24h) * 10 + Math.random() * 20;
+}
 
-    calculateSMA(coinData) {
-        // محاكاة حساب المتوسط المتحرك البسيط
-        return coinData.price * (0.95 + Math.random() * 0.1);
-    }
+calculateSupportResistanceLevels(coinData) {
+    const currentPrice = isNaN(coinData.price) ? 0 : coinData.price;
+    const high24h = isNaN(coinData.high24h) ? currentPrice : coinData.high24h;
+    const low24h = isNaN(coinData.low24h) ? currentPrice : coinData.low24h;
+    
+    return {
+        support1: low24h * 0.98,
+        support2: low24h * 0.95,
+        resistance1: high24h * 1.02,
+        resistance2: high24h * 1.05,
+        pivot: (high24h + low24h + currentPrice) / 3
+    };
+}
 
-    calculateResistance(coinData) {
-        // محاكاة حساب مستوى المقاومة
-        return coinData.high24h * (1 + Math.random() * 0.05);
-    }
+calculateLiquidity(coinData) {
+    const volume24h = isNaN(coinData.volume24h) ? 0 : coinData.volume24h;
+    return volume24h > 100000 ? Math.random() * 2 - 1 : -1; // خففت من مليار إلى 100 ألف
+}
 
-    calculateLiquidity(coinData) {
-        // محاكاة مؤشر السيولة
-        return coinData.volume24h > 1000000000 ? Math.random() * 2 - 1 : -1;
-    }
-
-       calculateVolumeIncrease(coinData) {
-        // محاكاة زيادة حجم التداول
-        return Math.random() * 50;
-    }
-
-    calculateTrendStrength(coinData) {
-        // محاكاة قوة الاتجاه
-        return Math.abs(coinData.change24h) * 10 + Math.random() * 20;
-    }
-
-    calculateSupportResistanceLevels(coinData) {
-        const currentPrice = coinData.price;
-        const high24h = coinData.high24h;
-        const low24h = coinData.low24h;
-        
-        return {
-            support1: low24h * 0.98,
-            support2: low24h * 0.95,
-            resistance1: high24h * 1.02,
-            resistance2: high24h * 1.05,
-            pivot: (high24h + low24h + currentPrice) / 3
-        };
-    }
 
     calculatePriceTargets(coinData, levels) {
         const currentPrice = coinData.price;
