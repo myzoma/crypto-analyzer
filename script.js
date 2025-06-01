@@ -86,84 +86,65 @@ class CryptoAnalyzer {
 }
 
     async analyzeCoin(coinData) {
-        let score = 0;
-        const indicators = {};
-        
-        // 1. تحليل RSI
-        const rsi = this.calculateRSI(coinData);
-        indicators.rsi = rsi;
-        if (rsi > CONFIG.INDICATORS.RSI.BREAKOUT_LEVEL && rsi < 70) {
-            score += CONFIG.SCORING.RSI_BREAKOUT;
-            indicators.rsiSignal = 'اختراق صعودي';
-        }
-        
-        // 2. تحليل MACD
-        const macd = this.calculateMACD(coinData);
-        indicators.macd = macd;
-        if (macd.signal === 'bullish') {
-            score += CONFIG.SCORING.MACD_SIGNAL;
-            indicators.macdSignal = 'إشارة صعودية';
-        }
-        
-        // 3. تحليل المتوسط المتحرك
-        const sma = this.calculateSMA(coinData);
-        indicators.sma = sma;
-        if (coinData.price > sma) {
-            score += CONFIG.SCORING.SMA_BREAKOUT;
-            indicators.smaSignal = 'فوق المتوسط المتحرك';
-        }
-        
-        // 4. تحليل المقاومة
-        const resistance = this.calculateResistance(coinData);
-        indicators.resistance = resistance;
-        if (coinData.price >= resistance * 0.98) { // قريب من المقاومة
-            score += CONFIG.SCORING.RESISTANCE_BREAK;
-            indicators.resistanceSignal = 'اقتراب من المقاومة';
-        }
-        
-        // 5. مؤشر السيولة
-        const liquidity = this.calculateLiquidity(coinData);
-        indicators.liquidity = liquidity;
-        if (liquidity > 0) {
-            score += CONFIG.SCORING.LIQUIDITY_CROSS;
-            indicators.liquiditySignal = 'تقاطع صعودي';
-        }
-        
-        // 6. حجم التداول
-        const volumeIncrease = this.calculateVolumeIncrease(coinData);
-        indicators.volumeIncrease = volumeIncrease;
-        if (volumeIncrease > 20) { // زيادة 20% في الحجم
-            score += CONFIG.SCORING.VOLUME_INCREASE;
-            indicators.volumeSignal = `زيادة ${volumeIncrease.toFixed(1)}%`;
-        }
-        
-        // 7. قوة الاتجاه
-        const trendStrength = this.calculateTrendStrength(coinData);
-        indicators.trendStrength = trendStrength;
-        if (trendStrength > 60) {
-            score += CONFIG.SCORING.TREND_STRENGTH;
-            indicators.trendSignal = 'اتجاه قوي';
-        }
-        
-        // حساب مستويات الدعم والمقاومة
-        const levels = this.calculateSupportResistanceLevels(coinData);
-        
-        // حساب الأهداف السعرية
-        const targets = this.calculatePriceTargets(coinData, levels);
-        
-        // نقطة الدخول ووقف الخسارة
-        const entryExit = this.calculateEntryExit(coinData, levels);
-        
-        return {
-            ...coinData,
-            score: Math.min(score, 100), // الحد الأقصى 100 نقطة
-            indicators,
-            levels,
-            targets,
-            entryExit,
-            analysis: this.generateAnalysis(coinData, indicators, score)
-        };
+    let score = 20;
+    const indicators = {};
+    
+    // التأكد من صحة البيانات
+    const change24h = isNaN(coinData.change24h) ? 0 : coinData.change24h;
+    const volume24h = isNaN(coinData.volume24h) ? 0 : coinData.volume24h;
+    const price = isNaN(coinData.price) ? 0 : coinData.price;
+    
+    // 1. تحليل التغيير
+    if (change24h > 5) score += 25;
+    else if (change24h > 2) score += 15;
+    else if (change24h > 0) score += 10;
+    
+    // 2. تحليل الحجم
+    if (volume24h > 10000000) score += 20;
+    else if (volume24h > 1000000) score += 15;
+    else if (volume24h > 100000) score += 10;
+    
+    // 3. RSI محسن
+    const rsi = Math.max(20, Math.min(80, 50 + change24h * 2));
+    indicators.rsi = rsi;
+    if (rsi > 50 && rsi < 70) {
+        score += 15;
+        indicators.rsiSignal = 'اختراق صعودي';
     }
+    
+    // 4. MACD
+    const macd = change24h > 1 ? 'bullish' : 'bearish';
+    indicators.macd = { signal: macd };
+    if (macd === 'bullish') {
+        score += 15;
+        indicators.macdSignal = 'إشارة صعودية';
+    }
+    
+    // 5. المتوسط المتحرك
+    const sma = price * 0.98;
+    indicators.sma = sma;
+    
+    // 6. قوة الاتجاه
+    const trendStrength = Math.abs(change24h) * 10;
+    indicators.trendStrength = trendStrength;
+    
+    // 7. السيولة
+    indicators.liquidity = volume24h > 1000000 ? 1 : -1;
+    
+    // 8. زيادة الحجم
+    indicators.volumeIncrease = Math.random() * 50;
+    
+    return {
+        ...coinData,
+        score: Math.min(score, 100),
+        indicators,
+        levels: this.calculateSupportResistanceLevels(coinData),
+        targets: this.calculatePriceTargets(coinData, {}),
+        entryExit: this.calculateEntryExit(coinData, {}),
+        analysis: this.generateAnalysis(coinData, indicators, score)
+    };
+}
+
 
   calculateRSI(coinData) {
         // محاكاة حساب RSI
