@@ -66,61 +66,24 @@ class CryptoAnalyzer {
             .slice(0, CONFIG.FILTERS.MAX_RESULTS);
     }
 
-    async getMockData() {
-        // بيانات تجريبية - في التطبيق الحقيقي ستأتي من OKX API
-        return [
-            {
-                symbol: 'BTC',
-                name: 'Bitcoin',
-                price: 43250.50,
-                change24h: 2.45,
-                volume24h: 28500000000,
-                high24h: 43800,
-                low24h: 42100,
-                marketCap: 847000000000
-            },
-            {
-                symbol: 'ETH',
-                name: 'Ethereum',
-                price: 2650.75,
-                change24h: 3.21,
-                volume24h: 15200000000,
-                high24h: 2720,
-                low24h: 2580,
-                marketCap: 318000000000
-            },
-            {
-                symbol: 'BNB',
-                name: 'BNB',
-                price: 315.20,
-                change24h: 1.85,
-                volume24h: 1800000000,
-                high24h: 322,
-                low24h: 308,
-                marketCap: 47000000000
-            },
-            {
-                symbol: 'SOL',
-                name: 'Solana',
-                price: 98.45,
-                change24h: 5.67,
-                volume24h: 2100000000,
-                high24h: 102,
-                low24h: 92,
-                marketCap: 42000000000
-            },
-            {
-                symbol: 'ADA',
-                name: 'Cardano',
-                price: 0.485,
-                change24h: 4.32,
-                volume24h: 850000000,
-                high24h: 0.495,
-                low24h: 0.465,
-                marketCap: 17000000000
-            }
-        ];
-    }
+  async getMockData() {
+    const response = await fetch('https://www.okx.com/api/v5/market/tickers?instType=SPOT');
+    const data = await response.json();
+    
+    return data.data
+        .filter(ticker => ticker.instId.endsWith('-USDT'))
+        .slice(0, 20)
+        .map(ticker => ({
+            symbol: ticker.instId.replace('-USDT', ''),
+            name: ticker.instId.replace('-USDT', ''),
+            price: parseFloat(ticker.last),
+            change24h: parseFloat(ticker.chg24h) * 100,
+            volume24h: parseFloat(ticker.volCcy24h),
+            high24h: parseFloat(ticker.high24h),
+            low24h: parseFloat(ticker.low24h),
+            marketCap: parseFloat(ticker.volCcy24h) * 100
+        }));
+}
 
     async analyzeCoin(coinData) {
         let score = 0;
