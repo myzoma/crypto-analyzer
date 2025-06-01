@@ -609,7 +609,7 @@ calculateLiquidity(coinData) {
             return;
         }
 
-        // تحديث معلومات الرأس بأمان
+        // تحديث معلومات الرأس
         const modalCoinSymbol = document.getElementById('modalCoinSymbol');
         const modalCoinName = document.getElementById('modalCoinName');
         const modalCoinPrice = document.getElementById('modalCoinPrice');
@@ -626,7 +626,7 @@ calculateLiquidity(coinData) {
             technicalAnalysis.innerHTML = `<p>${coin.analysis || 'تحليل غير متوفر'}</p>`;
         }
 
-        // المستويات الحرجة مع قيم افتراضية آمنة
+        // المستويات الحرجة
         const price = coin.price || 0;
         const supportLevel = document.getElementById('supportLevel');
         const resistanceLevel = document.getElementById('resistanceLevel');
@@ -649,10 +649,29 @@ calculateLiquidity(coinData) {
             `;
         }
 
-        // المؤشرات التفصيلية
+        // المؤشرات التفصيلية - مبسطة
         const indicatorsDetail = document.getElementById('indicatorsDetail');
-        if (indicatorsDetail) {
-            indicatorsDetail.innerHTML = this.renderDetailedIndicators(coin.indicators || {});
+        if (indicatorsDetail && coin.indicators) {
+            let indicatorsHtml = '<div class="indicators-grid">';
+            
+            if (coin.indicators.changeSignal) {
+                indicatorsHtml += `<div class="indicator-item">إشارة التغيير: ${coin.indicators.changeSignal}</div>`;
+            }
+            if (coin.indicators.volumeSignal) {
+                indicatorsHtml += `<div class="indicator-item">إشارة الحجم: ${coin.indicators.volumeSignal}</div>`;
+            }
+            if (coin.indicators.priceSignal) {
+                indicatorsHtml += `<div class="indicator-item">إشارة السعر: ${coin.indicators.priceSignal}</div>`;
+            }
+            if (coin.indicators.rsiSignal) {
+                indicatorsHtml += `<div class="indicator-item">مؤشر RSI: ${coin.indicators.rsiSignal}</div>`;
+            }
+            if (coin.indicators.momentumSignal) {
+                indicatorsHtml += `<div class="indicator-item">إشارة الزخم: ${coin.indicators.momentumSignal}</div>`;
+            }
+            
+            indicatorsHtml += '</div>';
+            indicatorsDetail.innerHTML = indicatorsHtml;
         }
 
         modal.style.display = 'block';
