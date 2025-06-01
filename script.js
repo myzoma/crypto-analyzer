@@ -7,6 +7,8 @@ class CryptoAnalyzer {
         this.init();
     }
 
+
+    
     init() {
         this.setupEventListeners();
         this.startAnalysis();
@@ -66,7 +68,7 @@ class CryptoAnalyzer {
             .slice(0, CONFIG.FILTERS.MAX_RESULTS);
     }
 
- async getMockData() {
+async getMockData() {
     try {
         const response = await fetch('https://www.okx.com/api/v5/market/tickers?instType=SPOT');
         const data = await response.json();
@@ -75,55 +77,31 @@ class CryptoAnalyzer {
         
         const filteredData = data.data
             .filter(ticker => {
-                // تصفية العملات التي تحتوي على البيانات المطلوبة
                 return ticker.instId.endsWith('-USDT') && 
                        ticker.last && 
-                       ticker.volCcy24h && 
-                       parseFloat(ticker.volCcy24h) > 100000; // حجم تداول جيد
+                       parseFloat(ticker.last) > 0;
             })
-            .slice(0, 50) // زيادة العدد للحصول على عملات أكثر
+            .slice(0, 30)
             .map(ticker => ({
                 symbol: ticker.instId.replace('-USDT', ''),
                 name: ticker.instId.replace('-USDT', ''),
                 price: parseFloat(ticker.last) || 0,
-                change24h: ticker.chg24h ? (parseFloat(ticker.chg24h) * 100) : 0,
-                volume24h: parseFloat(ticker.volCcy24h) || 0,
-                high24h: parseFloat(ticker.high24h) || parseFloat(ticker.last) || 0,
-                low24h: parseFloat(ticker.low24h) || parseFloat(ticker.last) || 0,
-                marketCap: (parseFloat(ticker.volCcy24h) || 0) * (parseFloat(ticker.last) || 0)
+                change24h: ticker.chg24h ? (parseFloat(ticker.chg24h) * 100) : (Math.random() * 10 - 5), // قيمة عشوائية إذا لم تتوفر
+                volume24h: parseFloat(ticker.volCcy24h) || 1000000,
+                high24h: parseFloat(ticker.high24h) || parseFloat(ticker.last) * 1.05,
+                low24h: parseFloat(ticker.low24h) || parseFloat(ticker.last) * 0.95,
+                marketCap: (parseFloat(ticker.volCcy24h) || 1000000) * (parseFloat(ticker.last) || 1)
             }));
             
         console.log('العملات المفلترة:', filteredData.length);
+        console.log('أول عملة:', filteredData[0]);
         return filteredData;
         
     } catch (error) {
         console.error('خطأ في جلب البيانات:', error);
-        // بيانات احتياطية
-        return [
-            {
-                symbol: 'BTC',
-                name: 'Bitcoin',
-                price: 43250.50,
-                change24h: 2.5,
-                volume24h: 15000000000,
-                high24h: 44000,
-                low24h: 42000,
-                marketCap: 850000000000
-            },
-            {
-                symbol: 'ETH',
-                name: 'Ethereum',
-                price: 2650.75,
-                change24h: 3.2,
-                volume24h: 8000000000,
-                high24h: 2700,
-                low24h: 2600,
-                marketCap: 320000000000
-            }
-        ];
+        return [];
     }
 }
-
 
 
   async analyzeCoin(coinData) {
