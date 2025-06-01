@@ -57,7 +57,7 @@ class CryptoAnalyzer {
         const analyzedCoins = [];
         for (const coinData of mockData) {
             const analysis = await this.analyzeCoin(coinData);
-            if (analysis.score >= 30) { // فقط العملات التي تحقق الحد الأدنى
+            if (analysis.score >= 10) { // فقط العملات التي تحقق الحد الأدنى
                 analyzedCoins.push(analysis);
             }
         }
